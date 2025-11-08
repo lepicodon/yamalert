@@ -1,0 +1,185 @@
+:root {
+  --brand-primary: #ff6a00; /* orange */
+  --brand-secondary: #0b1f44; /* dark blue */
+  --bs-body-bg: #ffffff;
+  --bs-body-color: #212529;
+  --card-bg: #ffffff;
+  --card-color: #212529;
+}
+
+[data-theme="dark"] {
+  --bs-body-bg: #121212;
+  --bs-body-color: #d0d0d0;
+  --card-bg: #1e1e1e;
+  --card-color: #e5e5e5;
+}
+
+/* --------- Corporate Theme (dark blue + orange) ---------- */
+[data-theme="corporate"] {
+  --bs-body-bg: #f8fafc;
+  --bs-body-color: #0b1f44;
+  --card-bg: #ffffff;
+  --card-color: #0b1f44;
+  /* brand colours for buttons, nav‑bars, etc. */
+  --bs-primary: var(--brand-primary);
+  --bs-link-color: var(--brand-primary);
+}
+
+/* Card header styled as the dark‑blue brand colour */
+[data-theme="corporate"] .card-header,
+[data-theme="corporate"] .navbar,
+[data-theme="corporate"] .btn-primary,
+[data-theme="corporate"] .list-group-item.active {
+  background-color: var(--brand-secondary) !important;
+  color: #fff !important;
+}
+
+/* Primary button (orange) */
+[data-theme="corporate"] .btn-primary {
+  background-color: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+}
+
+/* Accent text in orange */
+[data-theme="corporate"] .text-brand-primary {
+  color: var(--brand-primary) !important;
+}
+
+/* General layout */
+body {
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+.card {
+  background: var(--card-bg);
+  color: var(--card-color);
+}
+
+#yamlPreview {
+  background: #0b0b0b;
+  color: #f1f1f1;
+}
+
+/* List group items follow the card colour */
+.list-group-item {
+  background: var(--card-bg);
+  color: var(--card-color);
+}
+
+/* Hover effect for list items in corporate theme */
+[data-theme="corporate"] .list-group-item:hover {
+  background-color: rgba(255,106,0,0.08);
+}
+
+/* ---------- Solarized (light) ---------- */
+[data-theme="solarized"] {
+  --bs-body-bg: #fdf6e3;
+  --bs-body-color: #586e75;
+  --card-bg: #eee8d5;
+  --card-color: #586e75;
+  --bs-primary: #268bd2; /* blue */
+}
+
+[data-theme="solarized"] .card-header,
+[data-theme="solarized"] .btn-primary {
+  background-color: #268bd2 !important;
+  color: #fff !important;
+}
+
+/* ---------- Mono (high-contrast grayscale) ---------- */
+[data-theme="mono"] {
+  --bs-body-bg: #ffffff;
+  --bs-body-color: #111111;
+  --card-bg: #f5f5f5;
+  --card-color: #111111;
+}
+
+[data-theme="mono"] .card-header,
+[data-theme="mono"] .btn-primary,
+[data-theme="mono"] .list-group-item.active {
+  background-color: #111 !important;
+  color: #fff !important;
+}
+
+[data-theme="mono"] .btn-primary {
+  background-color: #111 !important;
+  border-color: #111 !important;
+}
+
+/* ---------- Midnight (deep purple / blue) ---------- */
+[data-theme="midnight"] {
+  --bs-body-bg: #0b0f1a;
+  --bs-body-color: #cbd5e1;
+  --card-bg: #0f1724;
+  --card-color: #cbd5e1;
+  --bs-primary: #7c3aed; /* violet */
+}
+[data-theme="midnight"] .card-header,
+[data-theme="midnight"] .btn-primary {
+  background-color: #0b1220 !important;
+  color: #fff !important;
+}
+
+/* ---------- Pastel (soft colors) ---------- */
+[data-theme="pastel"] {
+  --bs-body-bg: #fffaf0;
+  --bs-body-color: #3a3a3a;
+  --card-bg: #fff6f9;
+  --card-color: #5b5b5b;
+  --bs-primary: #ff8fa3; /* soft pink */
+}
+[data-theme="pastel"] .card-header,
+[data-theme="pastel"] .btn-primary {
+  background-color: #ffd6e0 !important;
+  color: #3a3a3a !important;
+}
+
+/* ---------- Matrix (black + green text) ---------- */
+[data-theme="matrix"] {
+  --bs-body-bg: #000000;
+  --bs-body-color: #00ff77;
+  --card-bg: #000000;
+  --card-color: #00ff77;
+  --bs-primary: #00ff77;
+}
+[data-theme="matrix"] body,
+[data-theme="matrix"] .card,
+[data-theme="matrix"] .list-group-item {
+  background: #000 !important;
+  color: #00ff77 !important;
+}
+[data-theme="matrix"] .card-header,
+[data-theme="matrix"] .btn-primary {
+  background-color: #001a00 !important;
+  color: #00ff77 !important;
+}
+
+/* ---------- Sepia (paper-like) ---------- */
+[data-theme="sepia"] {
+  --bs-body-bg: #f4ecd8;
+  --bs-body-color: #5b4636;
+  --card-bg: #fff7e8;
+  --card-color: #5b4636;
+  --bs-primary: #a36b2a;
+}
+[data-theme="sepia"] .card-header,
+[data-theme="sepia"] .btn-primary {
+  background-color: #a36b2a !important;
+  color: #fff !important;
+}
+
+/* ---------- Neon (dark with saturated neon accents) ---------- */
+[data-theme="neon"] {
+  --bs-body-bg: #081018;
+  --bs-body-color: #e6f7ff;
+  --card-bg: #071223;
+  --card-color: #e6f7ff;
+  --bs-primary: #00f5ff; /* aqua */
+}
+[data-theme="neon"] .card-header,
+[data-theme="neon"] .btn-primary {
+  background-color: #00f5ff !important;
+  color: #00121a !important;
+}
+
