@@ -3,15 +3,19 @@ import os
 import re
 import json
 import yaml
+import bleach
 from io import BytesIO
 from typing import List, Optional, Dict, Any
+from functools import wraps
 
-from flask import Flask, jsonify, request, render_template, Response
+from flask import Flask, jsonify, request, render_template, Response, redirect, url_for, flash
+from flask_wtf.csrf import CSRFProtect, generate_csrf
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-# New import – the model lives in models.py
-from models import Template
+# Models
+from models import Template, Admin, Base
 
 # -----------------------------------------------------------------------------
 # Database engine & session
@@ -27,6 +31,51 @@ SessionLocal = scoped_session(sessionmaker(bind=engine, autoflush=False, autocom
 Base = None  # declarative base lives in models.py (not used directly)
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-please-change-in-production')
+app.config['WTF_CSRF_CHECK_DEFAULT'] = True
+app.config['WTF_CSRF_ENABLED'] = True
+csrf = CSRFProtect(app)
+
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    db = SessionLocal()
+    try:
+        return db.query(Admin).get(int(user_id))
+    finally:
+        db.close()
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return jsonify({"error": "Login required"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.after_request
+def after_request(response):
+    # Ensure CSRF token is available
+    if 'text/html' in response.headers.get('Content-Type', ''):
+        response.set_cookie('csrf_token', generate_csrf())
+    print("Response Headers:", dict(response.headers))
+    return response
+
+
+def sanitize_input(text: str, max_length: int = None) -> str:
+    """Sanitize user input by removing HTML tags and limiting length."""
+    if not text:
+        return ""
+    # Remove HTML tags and escape special characters
+    cleaned = bleach.clean(text, tags=[], strip=True)
+    # Optionally truncate
+    if max_length and len(cleaned) > max_length:
+        cleaned = cleaned[:max_length]
+    return cleaned
 
 
 # -----------------------------------------------------------------------------
@@ -197,7 +246,63 @@ def now_editor_state() -> Dict[str, Any]:
 
 
 # -----------------------------------------------------------------------------
-# Flask routes (identical to previous version)
+# Authentication routes
+# -----------------------------------------------------------------------------
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        
+        db = SessionLocal()
+        try:
+            user = db.query(Admin).filter_by(username=username).first()
+            if user and user.check_password(password):
+                login_user(user)
+                return redirect(url_for('index'))
+            else:
+                flash("Invalid username or password")
+        finally:
+            db.close()
+    
+    return render_template("login.html")
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route("/setup-admin", methods=["GET", "POST"])
+def setup_admin():
+    db = SessionLocal()
+    try:
+        # Check if any admin exists
+        if db.query(Admin).first():
+            return "Admin already exists", 403
+        
+        if request.method == "POST":
+            username = request.form.get("username")
+            password = request.form.get("password")
+            
+            if not username or not password:
+                return "Username and password required", 400
+                
+            admin = Admin(username=username)
+            admin.set_password(password)
+            db.add(admin)
+            db.commit()
+            return redirect(url_for('login'))
+        
+        return render_template("setup_admin.html")
+    finally:
+        db.close()
+
+# -----------------------------------------------------------------------------
+# Main routes
 # -----------------------------------------------------------------------------
 @app.route("/")
 def index():
@@ -254,12 +359,28 @@ def api_templates():
                     "has_recordings": bool(has_recordings),
                     "alert_count": alert_count,
                     "record_count": record_count,
+                    "created_at": x.created_at.isoformat() if x.created_at else None,
+                    "updated_at": x.updated_at.isoformat() if x.updated_at else None
                 }
             )
         return jsonify(result)
     finally:
         db.close()
 
+
+@app.delete("/api/template/<int:tid>")
+@admin_required
+def api_template_delete(tid: int):
+    db = SessionLocal()
+    try:
+        t = db.query(Template).get(tid)
+        if not t:
+            return jsonify({"error": "not found"}), 404
+        db.delete(t)
+        db.commit()
+        return jsonify({"status": "ok"})
+    finally:
+        db.close()
 
 @app.get("/api/template/<int:tid>")
 def api_template_get(tid: int):
@@ -277,6 +398,8 @@ def api_template_get(tid: int):
                 "sensor_type": t.sensor_type,
                 "description": t.description or "",
                 "content": t.content,
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+                "updated_at": t.updated_at.isoformat() if t.updated_at else None
             }
         )
     finally:
@@ -284,14 +407,21 @@ def api_template_get(tid: int):
 
 
 @app.post("/api/template")
+@admin_required
 def api_template_create():
-    data = request.get_json(force=True, silent=True) or {}
+    print("Received template creation request")
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        print("Request data:", data)
+    except Exception as e:
+        print("Error parsing JSON:", str(e))
+        return jsonify({"error": "Invalid JSON data"}), 400
     tid = data.get('id')
-    name = data.get("name", "").strip()
+    name = sanitize_input(data.get("name", "").strip(), max_length=120)
     ttype = data.get("type", "rule")
-    job_category = data.get("job_category", "")
-    sensor_type = data.get("sensor_type", "")
-    description = data.get("description", "")
+    job_category = sanitize_input(data.get("job_category", ""), max_length=100)
+    sensor_type = sanitize_input(data.get("sensor_type", ""), max_length=100)
+    description = sanitize_input(data.get("description", ""))
     content = data.get("content", "")
 
     if not name:
@@ -325,6 +455,8 @@ def api_template_create():
             return jsonify({"id": existing.id, "content_saved": bool(existing.content), "content_length": len(existing.content)})
 
         # Otherwise create a new template
+        from datetime import datetime
+        now = datetime.utcnow()
         t = Template(
             name=name,
             type=ttype,
@@ -332,6 +464,8 @@ def api_template_create():
             sensor_type=sensor_type or None,
             description=description or None,
             content=content,
+            created_at=now,
+            updated_at=now,
         )
         db.add(t)
         db.commit()

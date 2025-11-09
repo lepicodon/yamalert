@@ -1,8 +1,28 @@
 # models.py
-from sqlalchemy import Column, Integer, String, Text
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, Text, DateTime, UniqueConstraint, Boolean
 from sqlalchemy.ext.declarative import declarative_base
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 Base = declarative_base()
+
+
+class Admin(Base, UserMixin):
+    """Admin user model for authentication."""
+    __tablename__ = "admins"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(80), unique=True, nullable=False)
+    password_hash = Column(String(200), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 
 class Template(Base):
@@ -38,8 +58,16 @@ class Template(Base):
             "job_category": self.job_category,
             "sensor_type": self.sensor_type,
             "description": self.description,
-            "content": self.content
+            "content": self.content,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
 
     # The actual YAML content as a string
     content = Column(Text, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint('name', name='uix_template_name'),
+    )

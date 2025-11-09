@@ -1,78 +1,193 @@
 :root {
-  --brand-primary: #ff6a00; /* orange */
-  --brand-secondary: #0b1f44; /* dark blue */
   --bs-body-bg: #ffffff;
-  --bs-body-color: #212529;
+  --bs-body-color: #2c3e50;
   --card-bg: #ffffff;
-  --card-color: #212529;
+  --card-color: #2c3e50;
+  --bs-primary: #3498db;
+  --bs-primary-rgb: 52, 152, 219;
 }
 
+/* ---------- Dark Theme ---------- */
 [data-theme="dark"] {
-  --bs-body-bg: #121212;
-  --bs-body-color: #d0d0d0;
-  --card-bg: #1e1e1e;
-  --card-color: #e5e5e5;
+  --bs-body-bg: #1a1a1a;
+  --bs-body-color: #e0e0e0;
+  --card-bg: #242424;
+  --card-color: #e0e0e0;
+  --bs-primary: #3498db;
+  --bs-primary-rgb: 52, 152, 219;
 }
 
-/* --------- Corporate Theme (dark blue + orange) ---------- */
+/* ---------- Corporate Theme ---------- */
 [data-theme="corporate"] {
   --bs-body-bg: #f8fafc;
-  --bs-body-color: #0b1f44;
+  --bs-body-color: #1e293b;
   --card-bg: #ffffff;
-  --card-color: #0b1f44;
-  /* brand colours for buttons, nav‑bars, etc. */
-  --bs-primary: var(--brand-primary);
-  --bs-link-color: var(--brand-primary);
+  --card-color: #1e293b;
+  --bs-primary: #0050b3;
+  --bs-primary-rgb: 0, 80, 179;
+  --corporate-accent: #ff6b35;
 }
 
-/* Card header styled as the dark‑blue brand colour */
-[data-theme="corporate"] .card-header,
-[data-theme="corporate"] .navbar,
-[data-theme="corporate"] .btn-primary,
-[data-theme="corporate"] .list-group-item.active {
-  background-color: var(--brand-secondary) !important;
-  color: #fff !important;
+[data-theme="corporate"] .card-header {
+  background: linear-gradient(135deg, #0050b3, #003a8c) !important;
+  color: white !important;
 }
 
-/* Primary button (orange) */
 [data-theme="corporate"] .btn-primary {
-  background-color: var(--brand-primary) !important;
-  border-color: var(--brand-primary) !important;
+  background: #0050b3 !important;
+  border-color: #003a8c !important;
 }
 
-/* Accent text in orange */
-[data-theme="corporate"] .text-brand-primary {
-  color: var(--brand-primary) !important;
+[data-theme="corporate"] .list-group-item.active {
+  background-color: #0050b3 !important;
+  border-color: #003a8c !important;
 }
 
-/* General layout */
+[data-theme="corporate"] .list-group-item:hover {
+  background-color: rgba(0, 80, 179, 0.05);
+}
+
+/* ---------- Nordic Theme ---------- */
+[data-theme="nordic"] {
+  --bs-body-bg: #eceff4;
+  --bs-body-color: #2e3440;
+  --card-bg: #ffffff;
+  --card-color: #2e3440;
+  --bs-primary: #5e81ac;
+  --bs-primary-rgb: 94, 129, 172;
+}
+
+/* ---------- Monokai Theme ---------- */
+[data-theme="monokai"] {
+  --bs-body-bg: #272822;
+  --bs-body-color: #f8f8f2;
+  --card-bg: #1e1f1c;
+  --card-color: #f8f8f2;
+  --bs-primary: #a6e22e;
+  --bs-primary-rgb: 166, 226, 46;
+}
+
+[data-theme="monokai"] .card-header,
+[data-theme="monokai"] .btn-primary {
+  background-color: #a6e22e !important;
+  color: #272822 !important;
+}
+
+/* ---------- Cyberpunk Theme ---------- */
+[data-theme="cyberpunk"] {
+  --bs-body-bg: #2b213a;
+  --bs-body-color: #ff7edb;
+  --card-bg: #241b2f;
+  --card-color: #ff7edb;
+  --bs-primary: #0ff;
+  --bs-primary-rgb: 0, 255, 255;
+}
+
+[data-theme="cyberpunk"] .card {
+  border: 1px solid #0ff !important;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+/* ---------- Nature Theme ---------- */
+[data-theme="nature"] {
+  --bs-body-bg: #f4f8f2;
+  --bs-body-color: #2c4a3e;
+  --card-bg: #ffffff;
+  --card-color: #2c4a3e;
+  --bs-primary: #4a8c6f;
+  --bs-primary-rgb: 74, 140, 111;
+}
+
+/* ---------- Ocean Theme ---------- */
+[data-theme="ocean"] {
+  --bs-body-bg: #f0f7fa;
+  --bs-body-color: #006d77;
+  --card-bg: #ffffff;
+  --card-color: #006d77;
+  --bs-primary: #00a6b7;
+  --bs-primary-rgb: 0, 166, 183;
+}
+
+/* ---------- Sunset Theme ---------- */
+[data-theme="sunset"] {
+  --bs-body-bg: #2d142c;
+  --bs-body-color: #ffd4b8;
+  --card-bg: #451e3e;
+  --card-color: #ffd4b8;
+  --bs-primary: #ff9e7d;
+  --bs-primary-rgb: 255, 158, 125;
+}
+
+/* ---------- Winter Theme ---------- */
+[data-theme="winter"] {
+  --bs-body-bg: #e3e6ec;
+  --bs-body-color: #4c5c68;
+  --card-bg: #ffffff;
+  --card-color: #4c5c68;
+  --bs-primary: #7c98b3;
+  --bs-primary-rgb: 124, 152, 179;
+}
+
+/* ---------- Desert Theme ---------- */
+[data-theme="desert"] {
+  --bs-body-bg: #fbf7f0;
+  --bs-body-color: #8b4513;
+  --card-bg: #ffffff;
+  --card-color: #8b4513;
+  --bs-primary: #d68c45;
+  --bs-primary-rgb: 214, 140, 69;
+}
+
+/* General styles */
 body {
   background: var(--bs-body-bg);
   color: var(--bs-body-color);
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .card {
   background: var(--card-bg);
   color: var(--card-color);
+  transition: background-color 0.3s, color 0.3s;
 }
 
-#yamlPreview {
-  background: #0b0b0b;
-  color: #f1f1f1;
+.card-header {
+  background-color: var(--bs-primary) !important;
+  color: var(--card-bg) !important;
 }
 
-/* List group items follow the card colour */
+.btn-primary {
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
+}
+
 .list-group-item {
   background: var(--card-bg);
   color: var(--card-color);
+  transition: background-color 0.3s, color 0.3s;
 }
 
-/* Hover effect for list items in corporate theme */
-[data-theme="corporate"] .list-group-item:hover {
-  background-color: rgba(255,106,0,0.08);
+.list-group-item.active {
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-primary) !important;
 }
 
-/* ---------- Solarized (light) ---------- */
+#yamlPreview {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+/* Help section collapse arrow animation */
+.card-header[data-bs-toggle="collapse"] .bi-chevron-down {
+  transition: transform 0.3s ease-in-out;
+}
+
+.card-header[data-bs-toggle="collapse"][aria-expanded="true"] .bi-chevron-down {
+  transform: rotate(180deg);
+}
+
+/* ---------- Old themes removed ---------- */
 [data-theme="solarized"] {
   --bs-body-bg: #fdf6e3;
   --bs-body-color: #586e75;
