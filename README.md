@@ -2,8 +2,6 @@
 
 YamAlert is a modern, user-friendly web application for managing and validating Prometheus alert rules and Alertmanager configurations. It provides a clean interface for creating, editing, and sharing monitoring templates with built-in validation and a live YAML preview.
 
-![Screenshot showing the YamAlert interface](screenshot.png)
-
 ## 🌟 Features
 
 - **Template Management**
@@ -32,6 +30,10 @@ YamAlert is a modern, user-friendly web application for managing and validating 
   - CSRF protection
   - Input sanitization
   - Secure template storage
+
+## Screenshot
+
+![Screenshot showing the YamAlert interface](screenshot.png)
 
 ## 🚀 Quick Start
 
