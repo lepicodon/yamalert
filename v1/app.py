@@ -4,8 +4,7 @@ import re
 import json
 import yaml
 import bleach
-from io import BytesIO
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from functools import wraps
 
 from flask import Flask, jsonify, request, render_template, Response, redirect, url_for, flash
@@ -16,6 +15,9 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 # Models
 from models import Template, Admin, Base
+
+# Template utilities
+from seed_templates import get_template_metadata_dict
 
 # -----------------------------------------------------------------------------
 # Database engine & session
@@ -325,6 +327,14 @@ def api_templates():
             has_recordings = False
             alert_count = 0
             record_count = 0
+            metadata = {}
+            
+            try:
+                # Extract metadata from first alert rule
+                metadata = get_template_metadata_dict(x.content)
+            except Exception:
+                pass
+            
             try:
                 doc = yaml.safe_load(x.content or "")
                 groups = doc.get("groups") if isinstance(doc, dict) else []
@@ -359,6 +369,7 @@ def api_templates():
                     "has_recordings": bool(has_recordings),
                     "alert_count": alert_count,
                     "record_count": record_count,
+                    "metadata": metadata,
                     "created_at": x.created_at.isoformat() if x.created_at else None,
                     "updated_at": x.updated_at.isoformat() if x.updated_at else None
                 }
@@ -389,6 +400,14 @@ def api_template_get(tid: int):
         t = db.query(Template).get(tid)
         if not t:
             return jsonify({"error": "not found"}), 404
+        
+        # Extract metadata from content
+        metadata = {}
+        try:
+            metadata = get_template_metadata_dict(t.content)
+        except Exception:
+            pass  # If parsing fails, metadata remains empty
+        
         return jsonify(
             {
                 "id": t.id,
@@ -398,6 +417,7 @@ def api_template_get(tid: int):
                 "sensor_type": t.sensor_type,
                 "description": t.description or "",
                 "content": t.content,
+                "metadata": metadata,
                 "created_at": t.created_at.isoformat() if t.created_at else None,
                 "updated_at": t.updated_at.isoformat() if t.updated_at else None
             }

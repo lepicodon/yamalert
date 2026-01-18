@@ -3,3 +3,7 @@ __pycache__/
 
 # Data files
 data/*
+
+# OS files
+.DS_Store
+Thumbs.db
