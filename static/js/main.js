@@ -246,7 +246,11 @@ document.addEventListener('DOMContentLoaded', () => {
             allTemplates = await res.json();
             renderTemplateList();
         } catch (err) {
-            elements.templateList.innerHTML = `<div class="text-center text-danger mt-5">Error: ${err.message}</div>`;
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'text-center text-danger mt-5';
+            errorDiv.textContent = 'Error: ' + err.message;
+            elements.templateList.innerHTML = '';
+            elements.templateList.appendChild(errorDiv);
         }
     }
 
@@ -602,6 +606,12 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.setupErrorBanner.classList.remove('d-none');
     }
 
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     function showErrorModal(msg) {
         elements.errorModalMessage.textContent = msg;
         elements.errorModal.show();
@@ -781,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showModalError(msg) {
-        elements.modalErrorBanner.innerHTML = msg;
+        elements.modalErrorBanner.textContent = msg;
         elements.modalErrorBanner.classList.remove('d-none');
     }
 });

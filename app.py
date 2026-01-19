@@ -4,10 +4,15 @@ import re
 import yaml
 import requests
 import sqlite3
+import logging
 from flask import Flask, jsonify, request, render_template, session
 from typing import Any
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -429,7 +434,8 @@ def api_admin_create_rule():
         conn.commit()
         return jsonify({"status": "ok", "id": tid})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error creating rule: {e}", exc_info=True)
+        return jsonify({"error": "Failed to create rule"}), 500
     finally:
         conn.close()
 
@@ -466,7 +472,8 @@ def api_admin_update_rule(tid):
         conn.commit()
         return jsonify({"status": "ok"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error updating rule {tid}: {e}", exc_info=True)
+        return jsonify({"error": "Failed to update rule"}), 500
     finally:
         conn.close()
 
@@ -479,7 +486,8 @@ def api_admin_delete_rule(tid):
         conn.commit()
         return jsonify({"status": "ok"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error deleting rule {tid}: {e}", exc_info=True)
+        return jsonify({"error": "Failed to delete rule"}), 500
     finally:
         conn.close()
 
@@ -493,7 +501,8 @@ def api_validate_yaml():
     try:
         doc = load_yaml(content)
     except ValueError as ve:
-        return jsonify({"valid": False, "errors": [str(ve)], "promql_checked": 0, "promql_invalid": 0})
+        logger.error(f"YAML parsing error: {ve}", exc_info=True)
+        return jsonify({"valid": False, "errors": ["Invalid YAML format"], "promql_checked": 0, "promql_invalid": 0})
         
     promql_checked = 0
     promql_invalid = 0
@@ -535,7 +544,9 @@ def api_proxy_promql():
         resp.raise_for_status()
         return jsonify({"valid": True, "data": resp.json()})
     except requests.exceptions.RequestException as e:
-        return jsonify({"valid": False, "error": str(e)}), 502
+        logger.error(f"Prometheus query error for URL {prom_url}: {e}", exc_info=True)
+        return jsonify({"valid": False, "error": "Failed to query Prometheus"}), 502
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug_mode, port=5000)

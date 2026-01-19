@@ -2,9 +2,10 @@
 FROM python:3.14-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV FLASK_APP app.py
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=app.py \
+    FLASK_DEBUG=false
 
 # Set work directory
 WORKDIR /app
