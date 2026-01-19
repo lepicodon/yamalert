@@ -649,14 +649,6 @@ Rules optimized for Event-Driven Ansible automation. These alerts can trigger au
 
 ---
 
-## Metrics Sources
-
-- **node_*** - Node Exporter metrics (system-level monitoring)
-- **vmware_*** - VMware Exporter metrics (virtualization monitoring)
-- **probe_*** - Blackbox Exporter metrics (endpoint monitoring)
-
----
-
 ## Best Practices
 
 1. **Threshold Tuning:** Adjust thresholds based on your environment's baseline performance
@@ -664,17 +656,6 @@ Rules optimized for Event-Driven Ansible automation. These alerts can trigger au
 3. **Playbook Customization:** Adapt the remediation playbooks to match your infrastructure and processes
 4. **Testing:** Validate each rule in a non-production environment before deployment
 5. **Documentation:** Keep instance-specific notes for rules you modify
-
----
-
-## Contributing
-
-To add new rules or modify existing ones:
-
-1. Update the `defaults.json` file with the rule definition
-2. Update this documentation with comprehensive details
-3. Test the rule in a development environment
-4. Validate PromQL syntax via the YamAlert interface
 
 ---
 

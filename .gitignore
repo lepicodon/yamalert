@@ -1,9 +1,12 @@
-# Byte-compiled / optimized / DLL files
+# Python files
 __pycache__/
 
 # Data files
-*/data/*.db
+data/*.db
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Archives
+archives/
