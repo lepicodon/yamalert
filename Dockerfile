@@ -12,7 +12,7 @@ WORKDIR /app
 # Install dependencies
 # (We don't have a requirements.txt yet, so we'll install common ones or I'll create it)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Copy project
 COPY . .
@@ -21,4 +21,4 @@ COPY . .
 EXPOSE 5000
 
 # Run gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", "--preload", "app:app"]
