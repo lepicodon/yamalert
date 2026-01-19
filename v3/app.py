@@ -247,6 +247,63 @@ def load_rules():
         })
     return rules
 
+def parse_available_themes():
+    """Parse themes.css to extract available theme names and metadata.
+    
+    Looks for theme definitions with CSS custom properties:
+    html[data-theme="themename"] {
+        --theme-icon: "bi-icon-name";
+        --theme-name: "Display Name";
+        ...
+    }
+    """
+    themes_css_path = os.path.join(os.path.dirname(__file__), 'static', 'css', 'themes.css')
+    
+    themes = []
+    
+    try:
+        with open(themes_css_path, 'r') as f:
+            content = f.read()
+            
+        # Find all theme blocks: html[data-theme="themename"] { ... }
+        import re
+        theme_pattern = r'html\[data-theme="([^"]+)"\]\s*\{([^}]+)\}'
+        theme_matches = re.finditer(theme_pattern, content)
+        
+        for match in theme_matches:
+            theme_value = match.group(1)
+            theme_block = match.group(2)
+            
+            # Extract metadata from CSS custom properties
+            icon_match = re.search(r'--theme-icon:\s*"([^"]+)"', theme_block)
+            name_match = re.search(r'--theme-name:\s*"([^"]+)"', theme_block)
+            
+            # Use extracted values or generate defaults
+            icon = icon_match.group(1) if icon_match else 'bi-palette'
+            display_name = name_match.group(1) if name_match else theme_value.replace('_', ' ').replace('-', ' ').title()
+            
+            themes.append({
+                'value': theme_value,
+                'name': display_name,
+                'icon': icon
+            })
+            
+    except Exception as e:
+        print(f"Error parsing themes: {e}")
+        # Fallback to default theme only
+        themes = [{'value': 'default', 'name': 'Default (Dark)', 'icon': 'bi-moon-stars'}]
+    
+    # Always ensure default is first if it exists
+    default_theme = next((t for t in themes if t['value'] == 'default'), None)
+    if default_theme:
+        themes.remove(default_theme)
+        themes.insert(0, default_theme)
+    elif not themes:
+        # If no themes found at all, add default
+        themes = [{'value': 'default', 'name': 'Default (Dark)', 'icon': 'bi-moon-stars'}]
+    
+    return themes
+
 
 
 # =============================================================================
@@ -266,8 +323,11 @@ def index():
             prom_urls.append({"name": parts[0].strip(), "url": parts[1].strip()})
         else:
             prom_urls.append({"name": item, "url": item})
+    
+    # Get available themes from CSS file
+    available_themes = parse_available_themes()
             
-    return render_template("index.html", prom_urls=prom_urls)
+    return render_template("index.html", prom_urls=prom_urls, available_themes=available_themes)
 
 @app.get("/api/templates")
 def api_templates():

@@ -5,7 +5,7 @@ YamAlert is a powerful, production-ready administrative interface for managing P
 ## ✨ Key Features
 
 - **🗄️ SQLite Persistence**: Rules are stored in a managed database (`data/rules.db`) for atomic updates and thread safety.
-- **🔐 Secure Admin Dashboard**: Password-protected CRUD operations (Add, Edit, Delete) for managing templates directly from the UI.
+- **🔐 Secure Admin Dashboard**: Password-protected CRUD operations (Add, Edit, Delete) for managing templates directly from the UI, with a Setup Wizard for first use.
 - **⚡ Live Prometheus Testing**: Validate your rules against live data from multiple Prometheus instances before saving.
 - **📁 Organized Portability**: All data is self-contained in a dedicated `data/` folder, making backup and migration simple.
 - **🎨 Modern UI/UX**: Includes a full-height scrollable sidebar, alphabetical sorting, and a suite of premium themes (Glassmorphism, Cyberpunk, etc.).
@@ -43,7 +43,6 @@ Configure the following variables to customize your deployment:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ADMIN_PASSWORD` | Password for administrative access | `admin123` |
 | `SECRET_KEY` | Flask session security key | Required in Prod |
 | `PROMETHEUS_URLS`| Comma-separated list of `Name\|URL` pairs | `Local\|http://localhost:9090` |
 
@@ -56,7 +55,6 @@ python app.py
 **Production (Gunicorn):**
 ```bash
 export SECRET_KEY="your-random-secret"
-export ADMIN_PASSWORD="your-secure-password"
 gunicorn --bind 0.0.0.0:5000 app:app
 ```
 

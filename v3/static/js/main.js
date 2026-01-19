@@ -71,21 +71,65 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarOffcanvas = new bootstrap.Offcanvas(elements.sidebarOffcanvasElem);
     }
 
+    // Theme Configuration
+    // =========================================================================
+    // Themes are now dynamically loaded from themes.css via Flask backend
+    // To add a new theme: 
+    // 1. Add the theme CSS to themes.css following the pattern: html[data-theme="themename"] { ... }
+    // 2. (Optional) Add an icon mapping in app.py's parse_available_themes() function
+    // 3. Restart the Flask app (or rely on auto-reload in debug mode)
+
+    const AVAILABLE_THEMES = window.AVAILABLE_THEMES || [
+        { value: 'default', name: 'Default (Dark)', icon: 'bi-moon-stars' }
+    ];
+
+    function initThemeDropdown() {
+        const menu = document.getElementById('themeDropdownMenu');
+        if (!menu) return;
+
+        // Build dropdown HTML
+        let html = `
+            <li>
+                <h6 class="dropdown-header">Select Theme</h6>
+            </li>
+        `;
+
+        AVAILABLE_THEMES.forEach((theme, index) => {
+            // Add divider after default theme
+            if (index === 1) {
+                html += '<li><hr class="dropdown-divider"></li>';
+            }
+
+            const activeClass = theme.value === 'default' ? 'active' : '';
+            html += `
+                <li>
+                    <a class="dropdown-item ${activeClass}" href="#" data-theme-value="${theme.value}">
+                        <i class="bi ${theme.icon} me-2"></i>${theme.name}
+                    </a>
+                </li>
+            `;
+        });
+
+        menu.innerHTML = html;
+
+        // Attach event listeners to new dropdown items
+        document.querySelectorAll('[data-theme-value]').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const theme = item.getAttribute('data-theme-value');
+                setTheme(theme);
+            });
+        });
+    }
+
     // Initialization
     // =========================================================================
+    initThemeDropdown();
     fetchTemplates();
     initTheme();
     checkAdminStatus();
 
     // Event Listeners
-    // Theme Selector
-    document.querySelectorAll('[data-theme-value]').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const theme = item.getAttribute('data-theme-value');
-            setTheme(theme);
-        });
-    });
 
     elements.alertTypes.forEach(radio => {
         radio.addEventListener('change', () => {
@@ -103,11 +147,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    // Custom CSS for small buttons
+    // Custom CSS for small buttons and badges
     const style = document.createElement('style');
     style.innerHTML = `
         .btn-xxs { padding: 0.1rem 0.3rem; font-size: 0.65rem; }
         .list-group-item.active .text-muted { color: rgba(255,255,255,0.7) !important; }
+        .rule-count-badge {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            line-height: 1;
+            color: var(--primary-color);
+            background-color: color-mix(in srgb, var(--primary-color) 15%, transparent);
+            border: 1px solid color-mix(in srgb, var(--primary-color) 30%, transparent);
+            border-radius: 10px;
+        }
     `;
     document.head.appendChild(style);
 
@@ -122,6 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     elements.loginSubmitBtn.addEventListener('click', handleLogin);
+
+    // Allow Enter key to submit login
+    elements.adminPasswordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleLogin();
+        }
+    });
     elements.adminLogoutBtn.addEventListener('click', handleLogout);
     elements.addNewRuleBtn.addEventListener('click', openAddModal);
     elements.ruleSaveBtn.addEventListener('click', saveRule);
@@ -236,10 +299,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
+            // Calculate rule count
+            const ruleCount = (t.rules && Array.isArray(t.rules)) ? t.rules.length : 0;
+
             item.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center w-100 py-1">
                     <div class="flex-grow-1 text-truncate pe-2 lh-1">
                         <span class="fw-bold" style="font-size: 0.85rem;">${t.name}</span>
+                        <span class="rule-count-badge ms-1">${ruleCount}</span>
                         <span class="text-muted ms-1" style="font-size: 0.7rem; opacity: 0.8;">(${t.job})</span>
                     </div>
                     ${adminButtons}

@@ -1,10 +1,7 @@
-/* Ported Themes from v1 adapted for v2 Variables */
-
-/* Default / Dark (Current v2 default is essentially a polished Dark theme) */
-
-
 /* ---------- Corporate Theme ---------- */
 html[data-theme="corporate"] {
+    --theme-icon: "bi-building";
+    --theme-name: "Corporate";
     --primary-color: #0050b3;
     --primary-hover: #003a8c;
     --secondary-bg: #e2e8f0;
@@ -18,6 +15,8 @@ html[data-theme="corporate"] {
 
 /* ---------- Nordic Theme ---------- */
 html[data-theme="nordic"] {
+    --theme-icon: "bi-snow";
+    --theme-name: "Nordic";
     --primary-color: #5e81ac;
     --primary-hover: #4c566a;
     --secondary-bg: #e5e9f0;
@@ -31,10 +30,11 @@ html[data-theme="nordic"] {
 
 /* ---------- Monokai Theme ---------- */
 html[data-theme="monokai"] {
+    --theme-icon: "bi-code-slash";
+    --theme-name: "Monokai";
     --primary-color: #a6e22e;
     --primary-hover: #8cc427;
     --secondary-bg: #272822;
-    /* body-like */
     --card-bg: #1e1f1c;
     --body-bg: #272822;
     --text-main: #f8f8f2;
@@ -45,6 +45,8 @@ html[data-theme="monokai"] {
 
 /* ---------- Cyberpunk Theme ---------- */
 html[data-theme="cyberpunk"] {
+    --theme-icon: "bi-cpu";
+    --theme-name: "Cyberpunk";
     --primary-color: #00ffff;
     --primary-hover: #00cccc;
     --secondary-bg: #36284a;
@@ -58,6 +60,8 @@ html[data-theme="cyberpunk"] {
 
 /* ---------- Nature Theme ---------- */
 html[data-theme="nature"] {
+    --theme-icon: "bi-tree";
+    --theme-name: "Nature";
     --primary-color: #4a8c6f;
     --primary-hover: #3a6b54;
     --secondary-bg: #e8efe6;
@@ -71,6 +75,8 @@ html[data-theme="nature"] {
 
 /* ---------- Ocean Theme ---------- */
 html[data-theme="ocean"] {
+    --theme-icon: "bi-water";
+    --theme-name: "Ocean";
     --primary-color: #00a6b7;
     --primary-hover: #008a99;
     --secondary-bg: #e0f2f5;
@@ -84,11 +90,12 @@ html[data-theme="ocean"] {
 
 /* ---------- Sunset Theme ---------- */
 html[data-theme="sunset"] {
+    --theme-icon: "bi-brightness-alt-high";
+    --theme-name: "Sunset";
     --primary-color: #ff9e7d;
     --primary-hover: #e08b6e;
     --secondary-bg: #451e3e;
     --card-bg: #451e3e;
-    /* card matches secondary somewhat */
     --body-bg: #2d142c;
     --text-main: #ffd4b8;
     --text-muted: #bf9585;
@@ -98,6 +105,8 @@ html[data-theme="sunset"] {
 
 /* ---------- Midnight Theme ---------- */
 html[data-theme="midnight"] {
+    --theme-icon: "bi-stars";
+    --theme-name: "Midnight";
     --primary-color: #7c3aed;
     --primary-hover: #6d28d9;
     --secondary-bg: #1e293b;
@@ -111,6 +120,8 @@ html[data-theme="midnight"] {
 
 /* ---------- Matrix Theme ---------- */
 html[data-theme="matrix"] {
+    --theme-icon: "bi-terminal";
+    --theme-name: "Matrix";
     --primary-color: #00ff77;
     --primary-hover: #00cc55;
     --secondary-bg: #000000;
@@ -124,6 +135,8 @@ html[data-theme="matrix"] {
 
 /* ---------- Neon Theme ---------- */
 html[data-theme="neon"] {
+    --theme-icon: "bi-lightning-charge";
+    --theme-name: "Neon";
     --primary-color: #00f5ff;
     --primary-hover: #00c2cc;
     --secondary-bg: #0d1b2a;
@@ -137,6 +150,8 @@ html[data-theme="neon"] {
 
 /* ---------- Mono Theme ---------- */
 html[data-theme="mono"] {
+    --theme-icon: "bi-circle-half";
+    --theme-name: "Mono";
     --primary-color: #000000;
     --primary-hover: #333333;
     --secondary-bg: #eeeeee;
@@ -169,8 +184,6 @@ html[data-theme="mono"] {
 
 [data-theme] .bg-dark {
     background-color: var(--secondary-bg) !important;
-    /* This overrides bootstrap bg-dark. be careful. 
-       In our inputs, we used bg-dark. */
 }
 
 [data-theme] input.form-control,

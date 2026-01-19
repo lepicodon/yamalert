@@ -547,5 +547,534 @@
         "value": "{{ $value }}"
       }
     ]
+  },
+  {
+    "id": "telegraf_disk_inode_low",
+    "name": "Telegraf Disk Inodes Low",
+    "job": "Telegraf",
+    "description": "Alert when filesystem inode usage exceeds 85%. High inode usage can prevent file creation even with free disk space.",
+    "alert_types": [
+      "email",
+      "eda"
+    ],
+    "rules": [
+      {
+        "alert": "DiskInodesWarning",
+        "expr": "(1 - (node_filesystem_files_free / node_filesystem_files)) * 100 > 85",
+        "for": "5m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "Low free inodes on {{ $labels.instance }} ({{ $labels.mountpoint }})",
+          "description": "Inode usage above 85% (current: {{ $value }}%)"
+        },
+        "playbook_linux": "Check inodes: df -i, Find directories with many files: for i in /*; do echo $i; find $i -xdev -type f | wc -l; done, Check for problematic directories: du --inodes -d 3 / | sort -nr | head -20",
+        "playbook_windows": "N/A - Inode monitoring is primarily for Linux/Unix filesystems",
+        "value": "{{ $value }}"
+      },
+      {
+        "alert": "DiskInodesCritical",
+        "expr": "(1 - (node_filesystem_files_free / node_filesystem_files)) * 100 > 95",
+        "for": "2m",
+        "labels": {
+          "severity": "critical"
+        },
+        "annotations": {
+          "summary": "Critical: Inodes exhausted on {{ $labels.instance }} ({{ $labels.mountpoint }})",
+          "description": "Inode usage above 95% (current: {{ $value }}%)"
+        },
+        "playbook_linux": "Check inodes: df -i, Find directories with many files: for i in /*; do echo $i; find $i -xdev -type f | wc -l; done, Clean up temp files: find /tmp -type f -delete, Clean old logs: journalctl --vacuum-time=7d",
+        "playbook_windows": "N/A - Inode monitoring is primarily for Linux/Unix filesystems",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "telegraf_disk_read_only",
+    "name": "Telegraf Disk Read-Only",
+    "job": "Telegraf",
+    "description": "Alert when filesystem becomes read-only, indicating potential disk issues or corruption.",
+    "alert_types": [
+      "email",
+      "interlink",
+      "eda"
+    ],
+    "rules": [
+      {
+        "alert": "FilesystemReadOnly",
+        "expr": "node_filesystem_readonly{fstype!~\"tmpfs|fuse.*\"} == 1",
+        "for": "1m",
+        "labels": {
+          "severity": "critical"
+        },
+        "annotations": {
+          "summary": "Filesystem {{ $labels.mountpoint }} is READ-ONLY on {{ $labels.instance }}",
+          "description": "Filesystem has been remounted read-only, likely due to errors"
+        },
+        "playbook_linux": "Check filesystem errors: dmesg | tail -50, Check mount status: mount | grep {{ mountpoint }}, Check disk health: smartctl -a {{ device }}, Attempt remount: mount -o remount,rw {{ mountpoint }}",
+        "playbook_windows": "Check event logs: Get-EventLog -LogName System -Source Disk -Newest 50, Check disk: chkdsk {{ drive }}: /f",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "telegraf_load_average_high",
+    "name": "Telegraf Load Average High",
+    "job": "Telegraf",
+    "description": "Alert when system load average is high relative to CPU count, indicating system saturation.",
+    "alert_types": [
+      "email",
+      "interlink"
+    ],
+    "rules": [
+      {
+        "alert": "LoadAverageHigh",
+        "expr": "node_load15 / count(node_cpu_seconds_total{mode=\"idle\"}) without (cpu, mode) > 2",
+        "for": "10m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "High load average on {{ $labels.instance }}",
+          "description": "15-minute load average is {{ $value | printf \"%.2f\" }}x the number of CPUs"
+        },
+        "playbook_linux": "Check load: uptime, Check processes: ps aux | awk '{print $3,$11}' | sort -rn | head -20, Check I/O wait: iostat -x 1 5, Check zombie processes: ps aux | grep 'Z'",
+        "playbook_windows": "Check CPU queue: Get-Counter '\\System\\Processor Queue Length', Check processes: Get-Process | Sort-Object CPU -Descending | Select-Object -First 20",
+        "value": "{{ $value }}"
+      },
+      {
+        "alert": "LoadAverageCritical",
+        "expr": "node_load15 / count(node_cpu_seconds_total{mode=\"idle\"}) without (cpu, mode) > 4",
+        "for": "5m",
+        "labels": {
+          "severity": "critical"
+        },
+        "annotations": {
+          "summary": "Critical load average on {{ $labels.instance }}",
+          "description": "15-minute load average is {{ $value | printf \"%.2f\" }}x the number of CPUs"
+        },
+        "playbook_linux": "Check load: uptime, Check runnable processes: ps -eo state,pid,cmd | grep '^R', Check I/O: iotop -o -b -n 3, Kill problematic processes if necessary",
+        "playbook_windows": "Check CPU queue: Get-Counter '\\System\\Processor Queue Length', Kill processes: Stop-Process -Id {{ pid }} -Force",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "telegraf_swap_usage_high",
+    "name": "Telegraf Swap Usage High",
+    "job": "Telegraf",
+    "description": "Alert when swap usage is high, indicating memory pressure.",
+    "alert_types": [
+      "interlink"
+    ],
+    "rules": [
+      {
+        "alert": "SwapUsageHigh",
+        "expr": "(1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 50",
+        "for": "5m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "High swap usage on {{ $labels.instance }}",
+          "description": "Swap usage above 50% (current: {{ $value }}%)"
+        },
+        "playbook_linux": "Check swap: free -h, Check what's swapped: for file in /proc/*/status; do awk '/VmSwap/{print $2,$3,FILENAME}' $file; done | sort -rn | head -10, Check memory pressure: dmesg | grep -i 'out of memory'",
+        "playbook_windows": "Check page file: Get-WmiObject Win32_PageFileUsage, Check memory: Get-Counter '\\Memory\\Available MBytes'",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "telegraf_disk_io_high",
+    "name": "Telegraf Disk I/O High",
+    "job": "Telegraf",
+    "description": "Alert when disk I/O utilization is saturated for extended periods.",
+    "alert_types": [
+      "email"
+    ],
+    "rules": [
+      {
+        "alert": "DiskIOSaturated",
+        "expr": "rate(node_disk_io_time_seconds_total[5m]) * 100 > 80",
+        "for": "10m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "High disk I/O on {{ $labels.instance }} ({{ $labels.device }})",
+          "description": "Disk I/O utilization above 80% (current: {{ $value }}%)"
+        },
+        "playbook_linux": "Check I/O: iostat -x 1 5, Check processes: iotop -o -b -n 3, Check disk stats: cat /proc/diskstats, Check mount options: mount | grep {{ device }}",
+        "playbook_windows": "Check disk performance: Get-Counter '\\PhysicalDisk(*)\\% Disk Time', Check processes: Get-Process | Sort-Object -Property NPM,PM -Descending | Select-Object -First 10",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "telegraf_network_bandwidth_high",
+    "name": "Telegraf Network Bandwidth High",
+    "job": "Telegraf",
+    "description": "Alert when network bandwidth usage is consistently high.",
+    "alert_types": [
+      "interlink"
+    ],
+    "rules": [
+      {
+        "alert": "NetworkBandwidthHigh",
+        "expr": "(rate(node_network_receive_bytes_total{device!~\"lo\"}[5m]) + rate(node_network_transmit_bytes_total{device!~\"lo\"}[5m])) / 1024 / 1024 > 100",
+        "for": "10m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "High network bandwidth on {{ $labels.instance }} ({{ $labels.device }})",
+          "description": "Network traffic above 100 MB/s (current: {{ $value | printf \"%.2f\" }} MB/s)"
+        },
+        "playbook_linux": "Check bandwidth: iftop -i {{ interface }}, Check connections: ss -tunap, Check top bandwidth users: nethogs {{ interface }}, Check interface stats: ethtool -S {{ interface }}",
+        "playbook_windows": "Check bandwidth: Get-Counter '\\Network Interface(*)\\Bytes Total/sec', Check connections: netstat -ano | findstr ESTABLISHED",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "telegraf_network_packet_loss",
+    "name": "Telegraf Network Packet Loss",
+    "job": "Telegraf",
+    "description": "Alert when network packet drops are detected, indicating network issues.",
+    "alert_types": [
+      "email",
+      "eda"
+    ],
+    "rules": [
+      {
+        "alert": "NetworkPacketDrops",
+        "expr": "rate(node_network_receive_drop_total{device!~\"lo\"}[5m]) + rate(node_network_transmit_drop_total{device!~\"lo\"}[5m]) > 100",
+        "for": "5m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "Network packet drops on {{ $labels.instance }} ({{ $labels.device }})",
+          "description": "Packet drops detected: {{ $value | printf \"%.2f\" }} packets/sec"
+        },
+        "playbook_linux": "Check drops: ip -s link show {{ interface }}, Check buffer: ethtool -g {{ interface }}, Check ring buffer: ethtool -G {{ interface }} rx 4096 tx 4096, Check errors: dmesg | grep {{ interface }}",
+        "playbook_windows": "Check drops: Get-NetAdapterStatistics, Check errors: netstat -e",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "telegraf_time_drift",
+    "name": "Telegraf Time Drift",
+    "job": "Telegraf",
+    "description": "Alert when system clock drifts significantly from NTP time.",
+    "alert_types": [
+      "email",
+      "interlink",
+      "eda"
+    ],
+    "rules": [
+      {
+        "alert": "SystemClockDrift",
+        "expr": "abs(node_timex_offset_seconds) > 0.1",
+        "for": "5m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "System clock drift detected on {{ $labels.instance }}",
+          "description": "Clock offset is {{ $value | printf \"%.3f\" }} seconds"
+        },
+        "playbook_linux": "Check NTP status: timedatectl status, Check NTP sync: ntpq -p, Sync time: systemctl restart chronyd || systemctl restart ntp, Force sync: ntpdate -u pool.ntp.org",
+        "playbook_windows": "Check time: w32tm /query /status, Resync: w32tm /resync, Check NTP server: w32tm /query /peers",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "telegraf_context_switches_high",
+    "name": "Telegraf Context Switches High",
+    "job": "Telegraf",
+    "description": "Alert when context switches are abnormally high, indicating CPU contention.",
+    "alert_types": [
+      "email"
+    ],
+    "rules": [
+      {
+        "alert": "ContextSwitchesHigh",
+        "expr": "rate(node_context_switches_total[5m]) > 10000",
+        "for": "10m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "High context switches on {{ $labels.instance }}",
+          "description": "Context switches above 10k/sec (current: {{ $value | printf \"%.0f\" }}/sec)"
+        },
+        "playbook_linux": "Check context switches: vmstat 1 5, Check processes: ps -eo pid,tid,class,rtprio,ni,pri,psr,pcpu,stat,wchan:14,comm | sort -k8 -rn | head -20, Check interrupts: cat /proc/interrupts",
+        "playbook_windows": "Check context switches: Get-Counter '\\System\\Context Switches/sec', Check processes: Get-Process | Sort-Object -Property CPU -Descending | Select-Object -First 20",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "ping_packet_loss",
+    "name": "Ping Packet Loss",
+    "job": "Ping",
+    "description": "Alert when packet loss is detected during ping monitoring.",
+    "alert_types": [
+      "email",
+      "interlink"
+    ],
+    "rules": [
+      {
+        "alert": "PingPacketLoss",
+        "expr": "avg_over_time(probe_success{job=\"ping\"}[5m]) < 0.95",
+        "for": "5m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "Packet loss detected to {{ $labels.instance }}",
+          "description": "Success rate below 95% (current: {{ $value | printf \"%.1f\" }}%)"
+        },
+        "playbook_linux": "Ping with stats: ping -c 100 {{ host }}, Check route: traceroute {{ host }}, Check local network: ip route, Check MTU: ip link show",
+        "playbook_windows": "Ping with stats: ping -n 100 {{ host }}, Tracert: tracert {{ host }}, Check route: route print",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "vmware_vm_disk_latency_high",
+    "name": "VMware VM Disk Latency High",
+    "job": "VMware",
+    "description": "Alert when VM disk latency is high, indicating storage performance issues.",
+    "alert_types": [
+      "email",
+      "eda"
+    ],
+    "rules": [
+      {
+        "alert": "VMDiskLatencyHigh",
+        "expr": "vmware_vm_disk_latency_average_milliseconds > 50",
+        "for": "5m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "High disk latency on VM {{ $labels.vm_name }} ({{ $labels.host }})",
+          "description": "Disk latency above 50ms (current: {{ $value }}ms)"
+        },
+        "playbook_linux": "SSH to ESX host, Check storage latency: esxtop (press 'u' for disk stats), Check datastore: vim-cmd hostsvc/datastore/summary, Check VM disk: vmkfstools -E {{ vmdk_path }}",
+        "playbook_windows": "Use vSphere Client, Check VM performance tab, Check datastore latency, Check storage path redundancy",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "vmware_vm_network_dropped_packets",
+    "name": "VMware VM Network Dropped Packets",
+    "job": "VMware",
+    "description": "Alert when VM network packets are being dropped.",
+    "alert_types": [
+      "interlink"
+    ],
+    "rules": [
+      {
+        "alert": "VMNetworkDroppedPackets",
+        "expr": "rate(vmware_vm_network_packets_dropped_total[5m]) > 10",
+        "for": "5m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "Network packet drops on VM {{ $labels.vm_name }} ({{ $labels.host }})",
+          "description": "Dropped packets: {{ $value | printf \"%.2f\" }} packets/sec"
+        },
+        "playbook_linux": "Check vSwitch: esxcli network vswitch standard list, Check port groups: esxcli network vswitch standard portgroup list, Check physical adapters: esxcli network nic list",
+        "playbook_windows": "Use vSphere Client, Check virtual switch configuration, Check port group settings, Check physical NIC status",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "vmware_snapshot_age_high",
+    "name": "VMware Snapshot Age High",
+    "job": "VMware",
+    "description": "Alert when VM snapshots are older than 7 days, indicating forgotten snapshots.",
+    "alert_types": [
+      "email",
+      "interlink"
+    ],
+    "rules": [
+      {
+        "alert": "VMSnapshotOld",
+        "expr": "vmware_vm_snapshot_age_seconds > 7 * 24 * 3600",
+        "for": "1h",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "Old snapshot on VM {{ $labels.vm_name }} ({{ $labels.host }})",
+          "description": "Snapshot is {{ $value | humanizeDuration }} old"
+        },
+        "playbook_linux": "SSH to vCenter, List snapshots: vim-cmd vmsvc/snapshot.get {{ vm_id }}, Remove snapshot: vim-cmd vmsvc/snapshot.remove {{ vm_id }} {{ snapshot_id }}",
+        "playbook_windows": "Use vSphere Client, Navigate to VM \u003e Snapshots, Review and delete old snapshots, Monitor snapshot consolidation",
+        "value": "{{ $value }}"
+      },
+      {
+        "alert": "VMSnapshotVeryOld",
+        "expr": "vmware_vm_snapshot_age_seconds > 30 * 24 * 3600",
+        "for": "1h",
+        "labels": {
+          "severity": "critical"
+        },
+        "annotations": {
+          "summary": "Very old snapshot on VM {{ $labels.vm_name }} ({{ $labels.host }})",
+          "description": "Snapshot is {{ $value | humanizeDuration }} old (over 30 days)"
+        },
+        "playbook_linux": "SSH to vCenter, List snapshots: vim-cmd vmsvc/snapshot.get {{ vm_id }}, URGENT: Remove snapshot during maintenance window",
+        "playbook_windows": "Use vSphere Client, URGENT: Schedule snapshot removal during maintenance window, Verify sufficient datastore space before consolidation",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "vmware_host_connection_state",
+    "name": "VMware Host Connection State",
+    "job": "VMware",
+    "description": "Alert when ESX host loses connection to vCenter.",
+    "alert_types": [
+      "email",
+      "interlink",
+      "eda"
+    ],
+    "rules": [
+      {
+        "alert": "HostDisconnected",
+        "expr": "vmware_host_connection_state{state=\"disconnected\"} == 1",
+        "for": "2m",
+        "labels": {
+          "severity": "critical"
+        },
+        "annotations": {
+          "summary": "ESX host {{ $labels.host_name }} disconnected from vCenter",
+          "description": "Host connection state is disconnected"
+        },
+        "playbook_linux": "SSH to ESX: ssh root@{{ host }}, Check services: /etc/init.d/hostd status, Restart management: /etc/init.d/hostd restart, Reconnect in vCenter: vim-cmd hostsvc/reconnect",
+        "playbook_windows": "Use vSphere Client, Right-click host \u003e Connection \u003e Reconnect, Check host network connectivity, Verify vCenter services are running",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "vmware_vm_power_state_unexpected",
+    "name": "VMware VM Power State Unexpected",
+    "job": "VMware",
+    "description": "Alert when critical VMs are powered off unexpectedly.",
+    "alert_types": [
+      "email",
+      "eda"
+    ],
+    "rules": [
+      {
+        "alert": "VMPoweredOff",
+        "expr": "vmware_vm_power_state{power_state=\"poweredOff\",vm_name=~\".*prod.*|.*critical.*\"} == 1",
+        "for": "5m",
+        "labels": {
+          "severity": "critical"
+        },
+        "annotations": {
+          "summary": "Critical VM {{ $labels.vm_name }} is powered off",
+          "description": "Production/critical VM is in powered off state"
+        },
+        "playbook_linux": "Check VM state: vim-cmd vmsvc/power.getstate {{ vm_id }}, Power on: vim-cmd vmsvc/power.on {{ vm_id }}, Check recent events: vim-cmd vmsvc/get.guest {{ vm_id }}",
+        "playbook_windows": "Use vSphere Client, Check VM events and alarms, Power on VM, Review recent tasks for shutdown cause",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "ssl_certificate_expiring_soon_30_days",
+    "name": "SSL Certificate Expiring Soon (30 days)",
+    "job": "SSL",
+    "description": "Early warning for SSL certificates expiring within 30 days.",
+    "alert_types": [
+      "email"
+    ],
+    "rules": [
+      {
+        "alert": "SSLCertExpiring30d",
+        "expr": "probe_ssl_earliest_cert_expiry - time() < 30 * 24 * 3600",
+        "for": "6h",
+        "labels": {
+          "severity": "info"
+        },
+        "annotations": {
+          "summary": "SSL certificate expiring within 30 days: {{ $labels.instance }}",
+          "description": "Certificate expires in {{ $value | humanizeDuration }}"
+        },
+        "playbook_linux": "Check cert: openssl s_client -connect {{ domain }}:443 -showcerts | openssl x509 -noout -dates, Prepare renewal: certbot certificates, Test renewal: certbot renew --dry-run",
+        "playbook_windows": "Check cert: certlm.msc, Request new cert: Use certificate template or ACME client, Test renewal process",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "ssl_certificate_expiring_soon_3_days",
+    "name": "SSL Certificate Expiring Soon (3 days)",
+    "job": "SSL",
+    "description": "Critical warning for SSL certificates expiring within 3 days.",
+    "alert_types": [
+      "email",
+      "interlink",
+      "eda"
+    ],
+    "rules": [
+      {
+        "alert": "SSLCertExpiring3d",
+        "expr": "probe_ssl_earliest_cert_expiry - time() < 3 * 24 * 3600",
+        "for": "30m",
+        "labels": {
+          "severity": "critical"
+        },
+        "annotations": {
+          "summary": "URGENT: SSL certificate expiring within 3 days: {{ $labels.instance }}",
+          "description": "Certificate expires in {{ $value | humanizeDuration }}"
+        },
+        "playbook_linux": "URGENT: Renew now: certbot renew --force-renewal, Manual renewal: openssl req -new -newkey rsa:2048 -nodes -keyout {{ domain }}.key -out {{ domain }}.csr, Restart services: systemctl restart nginx/apache2",
+        "playbook_windows": "URGENT: Renew certificate immediately, Import new cert: certlm.msc, Bind to service: IIS Manager, Restart service: iisreset",
+        "value": "{{ $value }}"
+      }
+    ]
+  },
+  {
+    "id": "ssl_probe_failed",
+    "name": "SSL Probe Failed",
+    "job": "SSL",
+    "description": "Alert when SSL certificate probe fails to connect.",
+    "alert_types": [
+      "email",
+      "interlink"
+    ],
+    "rules": [
+      {
+        "alert": "SSLProbeFailed",
+        "expr": "probe_success{job=\"ssl\"} == 0",
+        "for": "5m",
+        "labels": {
+          "severity": "warning"
+        },
+        "annotations": {
+          "summary": "SSL probe failed for {{ $labels.instance }}",
+          "description": "Unable to retrieve SSL certificate information"
+        },
+        "playbook_linux": "Test connection: openssl s_client -connect {{ domain }}:443, Check DNS: dig {{ domain }}, Check firewall: telnet {{ domain }} 443, Check service: systemctl status nginx/apache2",
+        "playbook_windows": "Test connection: Test-NetConnection {{ domain }} -Port 443, Check DNS: nslookup {{ domain }}, Check firewall: Test-NetConnection {{ domain }} -Port 443 -InformationLevel Detailed, Check IIS: Get-Website",
+        "value": "{{ $value }}"
+      }
+    ]
   }
 ]
