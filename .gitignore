@@ -2,7 +2,7 @@
 __pycache__/
 
 # Data files
-data/*
+*/data/*.db
 
 # OS files
 .DS_Store

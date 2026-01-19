@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YamAlert - YAML Rule Builder</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/themes.css') }}" rel="stylesheet">
+
+    <style>
+        /* Default Dark Theme (Outfit) */
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-bg: #1e293b;
+            --card-bg: #1e1e2d;
+            --body-bg: #151521;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: #2d2d3a;
+            --nav-bg: rgba(30, 30, 45, 0.95);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            /* Prevent body scroll, handle in containers */
+        }
+
+        .navbar {
+            background-color: var(--nav-bg);
+            border-bottom: 1px solid var(--border-color);
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .btn-check:checked+.btn-outline-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-outline-primary {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .list-group-item {
+            background-color: transparent;
+            border-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 8px !important;
+            margin-bottom: 4px;
+        }
+
+        .list-group-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .list-group-item.active {
+            background-color: rgba(99, 102, 241, 0.15);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .editor-textarea {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background-color: #0f0f15;
+            border: 1px solid var(--border-color);
+            color: #d4d4d8;
+            border-radius: 8px;
+            resize: none;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .editor-textarea:focus {
+            background-color: #0f0f15;
+            border-color: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+            outline: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 30, 45, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f50;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f4f65;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Sidebar Tweak */
+        @media (min-width: 1200px) {
+            .offcanvas-xl {
+                transform: none !important;
+                visibility: visible !important;
+                position: relative !important;
+                z-index: 1 !important;
+                border: none !important;
+                background: transparent !important;
+            }
+
+            .bg-xl-card {
+                background-color: var(--card-bg) !important;
+                border: 1px solid var(--border-color) !important;
+            }
+        }
+
+        .offcanvas-body {
+            padding: 0 !important;
+        }
+
+        @media (max-width: 1199.98px) {
+            .offcanvas-xl {
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column h-100">
+
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+                <button class="btn btn-sm btn-outline-primary d-xl-none" type="button" data-bs-toggle="offcanvas"
+                    data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+                    <i class="bi bi-list"></i>
+                </button>
+                <i class="bi bi-activity text-primary d-none d-sm-inline"></i>
+                <span style="letter-spacing: -0.5px;">YamAlert</span>
+            </a>
+            <div class="ms-auto d-flex gap-2 align-items-center">
+
+                <!-- Theme Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-palette"></i> Theme
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="max-height: 400px; overflow-y: auto;">
+                        <li>
+                            <h6 class="dropdown-header">Select Theme</h6>
+                        </li>
+                        <li><a class="dropdown-item active" href="#" data-theme-value="default"><i
+                                    class="bi bi-moon-stars me-2"></i>Default (Dark)</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="corporate"><i
+                                    class="bi bi-building me-2"></i>Corporate</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="nordic"><i
+                                    class="bi bi-snow me-2"></i>Nordic</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="monokai"><i
+                                    class="bi bi-code-slash me-2"></i>Monokai</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="cyberpunk"><i
+                                    class="bi bi-cpu me-2"></i>Cyberpunk</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="nature"><i
+                                    class="bi bi-tree me-2"></i>Nature</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="ocean"><i
+                                    class="bi bi-water me-2"></i>Ocean</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="sunset"><i
+                                    class="bi bi-brightness-alt-high me-2"></i>Sunset</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="midnight"><i
+                                    class="bi bi-stars me-2"></i>Midnight</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="matrix"><i
+                                    class="bi bi-terminal me-2"></i>Matrix</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="neon"><i
+                                    class="bi bi-lightning-charge me-2"></i>Neon</a></li>
+                        <li><a class="dropdown-item" href="#" data-theme-value="mono"><i
+                                    class="bi bi-circle-half me-2"></i>Mono</a></li>
+                    </ul>
+                </div>
+
+                <button id="adminLoginBtn" class="btn btn-sm btn-primary d-flex align-items-center gap-2">
+                    <i class="bi bi-lock"></i> Admin
+                </button>
+                <button id="adminLogoutBtn" class="btn btn-sm btn-outline-danger d-none align-items-center gap-2">
+                    <i class="bi bi-unlock"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 py-3 flex-grow-1 overflow-hidden" style="height: calc(100vh - 60px);">
+        <div class="row h-100 g-3">
+            <!-- Left Sidebar: Filter & List -->
+            <div class="offcanvas-xl offcanvas-start col-xl-3 h-100 fade-in" tabindex="-1" id="sidebarOffcanvas"
+                aria-labelledby="sidebarOffcanvasLabel">
+                <div class="offcanvas-header border-bottom border-secondary d-xl-none">
+                    <h5 class="offcanvas-title fw-bold" id="sidebarOffcanvasLabel">Template Menu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                        data-bs-target="#sidebarOffcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body p-0 d-flex flex-column h-100 overflow-hidden">
+                    <div
+                        class="card h-100 border-0 border-xl p-0 d-flex flex-column overflow-hidden bg-transparent bg-xl-card">
+                        <!-- Filters Section -->
+                        <div class="p-3 border-bottom border-secondary bg-dark bg-opacity-10">
+                            <label class="form-label text-muted small fw-bold text-uppercase mb-2"
+                                style="font-size: 0.75rem;">Alert Type</label>
+                            <div class="d-flex flex-wrap gap-2" id="alertTypeContainer">
+                                <input type="radio" class="btn-check" name="alertType" id="typeAll" value="all" checked>
+                                <label class="btn btn-sm btn-outline-primary flex-grow-1" for="typeAll">All</label>
+
+                                <input type="radio" class="btn-check" name="alertType" id="typeEmail" value="email">
+                                <label class="btn btn-sm btn-outline-primary flex-grow-1" for="typeEmail"
+                                    title="Email"><i class="bi bi-envelope"></i></label>
+
+                                <input type="radio" class="btn-check" name="alertType" id="typeInterlink"
+                                    value="interlink">
+                                <label class="btn btn-sm btn-outline-primary flex-grow-1" for="typeInterlink"
+                                    title="Interlink"><i class="bi bi-link-45deg"></i></label>
+
+                                <input type="radio" class="btn-check" name="alertType" id="typeEDA" value="eda">
+                                <label class="btn btn-sm btn-outline-primary flex-grow-1" for="typeEDA" title="EDA"><i
+                                        class="bi bi-lightning"></i></label>
+                            </div>
+
+                            <div class="d-grid mt-2 d-none" id="adminAddContainer">
+                                <button id="addNewRuleBtn" class="btn btn-sm btn-success">
+                                    <i class="bi bi-plus-lg me-1"></i> Add New Template
+                                </button>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-dark border-secondary text-muted"><i
+                                            class="bi bi-search"></i></span>
+                                    <input type="text" id="searchTemplate"
+                                        class="form-control bg-dark border-secondary text-light"
+                                        placeholder="Search templates...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- List Section -->
+                        <div id="templateList" class="list-group list-group-flush flex-grow-1 overflow-auto p-2">
+                            <!-- Populated by JS -->
+                            <div class="text-center text-muted mt-5">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Content Area -->
+            <div class="col-12 col-xl-9 h-100 fade-in" style="animation-delay: 0.1s;">
+
+                <!-- Welcome / Onboarding View -->
+                <div id="welcomeView" class="card h-100 border p-4 overflow-auto">
+                    <div class="text-center mb-5">
+                        <i class="bi bi-activity text-primary mb-3" style="font-size: 4rem;"></i>
+                        <h1 class="fw-bold">Welcome to YamAlert</h1>
+                        <p class="text-muted lead">YAML Alert Rule Builder.</p>
+                    </div>
+
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-4">
+                            <div class="card h-100 bg-dark bg-opacity-25 border-secondary p-3">
+                                <i class="bi bi-envelope text-primary mb-2 fs-3"></i>
+                                <h5 class="fw-bold">Email Alerts</h5>
+                                <p class="small text-muted mb-0">Standard notification rules designed for Alertmanager's
+                                    email integration.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 bg-dark bg-opacity-25 border-secondary p-3">
+                                <i class="bi bi-link-45deg text-primary mb-2 fs-3"></i>
+                                <h5 class="fw-bold">Interlink</h5>
+                                <p class="small text-muted mb-0">Rules for Interlink integration with automated
+                                    ServiceNow Incidents or Email notifications.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 bg-dark bg-opacity-25 border-secondary p-3">
+                                <i class="bi bi-lightning text-primary mb-2 fs-3"></i>
+                                <h5 class="fw-bold">EDA</h5>
+                                <p class="small text-muted mb-0">Event-Driven Ansible rules optimized for automated
+                                    remediation
+                                    flows.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-top border-secondary pt-5">
+                        <h4 class="fw-bold mb-4 text-center">How to use YamAlert</h4>
+                        <div class="row g-4 text-center">
+                            <div class="col-6 col-md-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3"
+                                    style="width: 60px; height: 60px;">
+                                    <span class="fw-bold text-primary">1</span>
+                                </div>
+                                <h6 class="fw-bold">Select</h6>
+                                <p class="small text-muted">Filter, Search and Pick a template from the sidebar catalog.
+                                </p>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3"
+                                    style="width: 60px; height: 60px;">
+                                    <span class="fw-bold text-primary">2</span>
+                                </div>
+                                <h6 class="fw-bold">Adjust</h6>
+                                <p class="small text-muted">Customize values and/or YAML logic in the live editor.</p>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3"
+                                    style="width: 60px; height: 60px;">
+                                    <span class="fw-bold text-primary">3</span>
+                                </div>
+                                <h6 class="fw-bold">Validate</h6>
+                                <p class="small text-muted">Check syntax and test against Prometheus.</p>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3"
+                                    style="width: 60px; height: 60px;">
+                                    <span class="fw-bold text-primary">4</span>
+                                </div>
+                                <h6 class="fw-bold">Export</h6>
+                                <p class="small text-muted">Copy to clipboard or download as .yml.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-5 text-center">
+                        <p class="text-muted small">Select a template on the left to get started.</p>
+                    </div>
+                </div>
+
+                <!-- Editor View (Hidden by default) -->
+                <div id="editorView" class="card h-100 d-none flex-column border overflow-hidden">
+
+                    <!-- Header with Validation -->
+                    <div
+                        class="card-header border-bottom border-secondary py-3 bg-dark bg-opacity-10 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div class="d-flex align-items-center gap-3 overflow-hidden">
+                            <h5 class="card-title mb-0 text-nowrap" id="editorTitle">Select a Template</h5>
+                            <div class="vr text-secondary d-none d-md-block"></div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- Validation Status Pill -->
+                            <div class="d-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-dark border border-secondary"
+                                style="font-size: 0.9rem;">
+                                <div id="validationIconWrapper" class="d-flex align-items-center">
+                                    <i class="bi bi-circle text-muted" id="validationIcon"></i>
+                                </div>
+                                <span class="fw-medium text-muted text-truncate" id="validationMsg"
+                                    style="max-width: 300px;">No active rule</span>
+                            </div>
+                            <span class="badge bg-dark border border-secondary text-muted" id="promqlStatus">PromQL:
+                                Pending</span>
+                            <div class="d-flex gap-2">
+                                <button id="copyBtn" class="btn btn-outline-light btn-sm" disabled>
+                                    <i class="bi bi-clipboard me-1"></i> Copy
+                                </button>
+                                <button id="downloadBtn" class="btn btn-primary btn-sm" disabled>
+                                    <i class="bi bi-download me-1"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Message Banner (Hidden by default) -->
+                    <div id="errorOneLine"
+                        class="alert alert-danger mb-0 rounded-0 py-2 px-3 border-0 border-bottom border-danger d-none small">
+                    </div>
+
+                    <div class="card-body d-flex flex-column h-100 overflow-hidden p-0">
+
+
+                        <!-- YAML Editor -->
+                        <div class="flex-grow-1 position-relative bg-black">
+                            <textarea id="yamlEditor"
+                                class="form-control editor-textarea w-100 h-100 p-3 border-0 rounded-0"
+                                spellcheck="false"
+                                placeholder="Select a template on the left to begin editing..."></textarea>
+                        </div>
+
+                        <!-- Explanatory Note -->
+                        <div class="p-2 border-top border-secondary bg-dark bg-opacity-10 text-center flex-shrink-0">
+                            <small class="text-muted" style="font-size: 0.8rem;">
+                                <i class="bi bi-info-circle me-1"></i>
+                                You can customize the rule directly in the editor above before copying or downloading.
+                            </small>
+                        </div>
+
+                        <!-- Live Testing Footer -->
+                        <div class="p-3 border-top border-secondary bg-dark bg-opacity-25 flex-shrink-0">
+                            <h6 class="text-muted fw-bold mb-2 small text-uppercase"><i
+                                    class="bi bi-broadcast me-2"></i>Live PromQL Check</h6>
+                            <div class="input-group input-group-sm mb-2">
+                                <button class="btn btn-dark border-secondary text-muted dropdown-toggle" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-list-stars me-1"></i> Presets
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark border-secondary shadow">
+                                    {% if prom_urls %}
+                                    {% for item in prom_urls %}
+                                    <li><a class="dropdown-item small" href="#"
+                                            onclick="document.getElementById('promUrl').value='{{ item.url }}'; return false;">{{
+                                            item.name }}</a></li>
+                                    {% endfor %}
+                                    {% else %}
+                                    <li><span class="dropdown-item-text small text-muted">No presets configured</span>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                                <input type="text" id="promUrl" class="form-control bg-dark border-secondary text-light"
+                                    placeholder="http://localhost:9090">
+                                <button class="btn btn-outline-primary" type="button" id="testQueryBtn">
+                                    <i class="bi bi-play-fill"></i> Test Query
+                                </button>
+                            </div>
+                            <!-- Results Area (Collapsed by default) -->
+                            <div id="queryResultArea" class="d-none mt-2">
+                                <div class="card bg-black border-secondary">
+                                    <div
+                                        class="card-header py-1 px-2 border-secondary bg-dark bg-opacity-50 d-flex justify-content-between align-items-center">
+                                        <span class="small text-muted">Result</span>
+                                        <button type="button" class="btn-close btn-close-white small" aria-label="Close"
+                                            style="width: 0.5rem; height: 0.5rem;"
+                                            onclick="document.getElementById('queryResultArea').classList.add('d-none')"></button>
+                                    </div>
+                                    <div class="card-body p-0 overflow-auto" style="max-height: 150px;">
+                                        <pre class="m-0 p-2 text-info small font-monospace"
+                                            id="queryResultContent"></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check2-circle me-2"></i> Copied to clipboard!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content bg-dark border-secondary shadow-lg">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fs-6 fw-bold text-uppercase">Admin Login</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Admin Password</label>
+                        <input type="password" id="adminPasswordInput"
+                            class="form-control bg-black border-secondary text-light">
+                    </div>
+                    <div id="loginErrorBanner" class="alert alert-danger d-none small py-2"></div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-primary w-100" id="loginSubmitBtn">Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rule Management Modal (Add/Edit) -->
+    <div class="modal fade" id="ruleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark border-secondary shadow-lg">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fs-5 fw-bold" id="ruleModalTitle">Add/Edit Template</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted text-uppercase fw-bold">Template Name</label>
+                            <input type="text" id="ruleNameInput"
+                                class="form-control bg-black border-secondary text-light"
+                                placeholder="e.g. High CPU Usage">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted text-uppercase fw-bold">Job Name</label>
+                            <input type="text" id="ruleJobInput"
+                                class="form-control bg-black border-secondary text-light"
+                                placeholder="e.g. node-exporter">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-muted text-uppercase fw-bold">Description</label>
+                            <textarea id="ruleDescInput" class="form-control bg-black border-secondary text-light"
+                                rows="2" placeholder="Describe what this alert does..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-muted text-uppercase fw-bold">Alert Types (comma
+                                separated)</label>
+                            <input type="text" id="ruleTypesInput"
+                                class="form-control bg-black border-secondary text-light"
+                                placeholder="email, eda, internal">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label small text-muted text-uppercase fw-bold mb-0">Rule Logic (YAML
+                                Groups)</label>
+                            <span id="modalValidationBadge"
+                                class="badge bg-dark border border-secondary text-muted">Pending Validation</span>
+                        </div>
+                        <textarea id="ruleYamlInput"
+                            class="form-control editor-textarea bg-black border-secondary text-light font-monospace"
+                            rows="12" placeholder="groups: ..."></textarea>
+                    </div>
+                    <div id="modalErrorBanner" class="alert alert-danger mt-3 d-none small"></div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary px-4" id="ruleSaveBtn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content bg-dark border-secondary shadow-lg">
+                <div class="modal-header border-danger">
+                    <h5 class="modal-title fs-6 fw-bold text-danger text-uppercase">Confirm Delete</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-triangle text-danger mb-3" style="font-size: 2rem;"></i>
+                    <p class="mb-0">Are you sure? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-sm btn-danger px-3" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Wizard Modal -->
+    <div class="modal fade" id="setupModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content bg-dark border-primary shadow-lg" style="border-width: 2px;">
+                <div class="modal-header border-secondary text-center d-block">
+                    <i class="bi bi-shield-lock text-primary mb-2" style="font-size: 3rem;"></i>
+                    <h5 class="modal-title fs-4 fw-bold text-uppercase w-100">Welcome to YamAlert</h5>
+                    <p class="small text-muted mb-0">First-run Security Configuration</p>
+                </div>
+                <div class="modal-body py-4">
+                    <p class="text-light mb-4 text-center">Please set an administrative password to secure your rule
+                        repository. This password will be hashed and stored in your local database.</p>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted text-uppercase fw-bold">New Admin Password</label>
+                        <input type="password" id="setupPasswordInput"
+                            class="form-control bg-black border-secondary text-light p-3"
+                            placeholder="Min 4 characters">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted text-uppercase fw-bold">Confirm Password</label>
+                        <input type="password" id="setupConfirmInput"
+                            class="form-control bg-black border-secondary text-light p-3" placeholder="Repeat password">
+                    </div>
+                    <div id="setupErrorBanner" class="alert alert-danger d-none small"></div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-primary w-100 py-2 fw-bold" id="setupSubmitBtn">Initialize
+                        Application</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content bg-dark border-warning shadow-lg">
+                <div class="modal-header border-warning">
+                    <h5 class="modal-title fs-6 fw-bold text-warning text-uppercase">Login Error</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-circle text-warning mb-3" style="font-size: 2rem;"></i>
+                    <p id="errorModalMessage" class="mb-0"></p>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-outline-secondary w-100"
+                        data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=2.7"></script>
+</body>
+
+</html>

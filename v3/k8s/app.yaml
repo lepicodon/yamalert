@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yamalert
+  labels:
+    app: yamalert
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yamalert
+  template:
+    metadata:
+      labels:
+        app: yamalert
+    spec:
+      containers:
+        - name: yamalert
+          image: yamalert:latest
+          ports:
+            - containerPort: 5000
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yamalert-secrets
+                  key: secret-key
+          volumeMounts:
+            - name: data-storage
+              mountPath: /app/data
+      volumes:
+        - name: data-storage
+          persistentVolumeClaim:
+            claimName: yamalert-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yamalert
+spec:
+  selector:
+    app: yamalert
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP

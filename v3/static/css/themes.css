@@ -1,0 +1,213 @@
+/* Ported Themes from v1 adapted for v2 Variables */
+
+/* Default / Dark (Current v2 default is essentially a polished Dark theme) */
+
+
+/* ---------- Corporate Theme ---------- */
+html[data-theme="corporate"] {
+    --primary-color: #0050b3;
+    --primary-hover: #003a8c;
+    --secondary-bg: #e2e8f0;
+    --card-bg: #ffffff;
+    --body-bg: #f8fafc;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #cbd5e1;
+    --nav-bg: #ffffff;
+}
+
+/* ---------- Nordic Theme ---------- */
+html[data-theme="nordic"] {
+    --primary-color: #5e81ac;
+    --primary-hover: #4c566a;
+    --secondary-bg: #e5e9f0;
+    --card-bg: #ffffff;
+    --body-bg: #eceff4;
+    --text-main: #2e3440;
+    --text-muted: #4c566a;
+    --border-color: #d8dee9;
+    --nav-bg: #eceff4;
+}
+
+/* ---------- Monokai Theme ---------- */
+html[data-theme="monokai"] {
+    --primary-color: #a6e22e;
+    --primary-hover: #8cc427;
+    --secondary-bg: #272822;
+    /* body-like */
+    --card-bg: #1e1f1c;
+    --body-bg: #272822;
+    --text-main: #f8f8f2;
+    --text-muted: #75715e;
+    --border-color: #49483e;
+    --nav-bg: #1e1f1c;
+}
+
+/* ---------- Cyberpunk Theme ---------- */
+html[data-theme="cyberpunk"] {
+    --primary-color: #00ffff;
+    --primary-hover: #00cccc;
+    --secondary-bg: #36284a;
+    --card-bg: #241b2f;
+    --body-bg: #2b213a;
+    --text-main: #ff7edb;
+    --text-muted: #bc65a5;
+    --border-color: #00ffff;
+    --nav-bg: #241b2f;
+}
+
+/* ---------- Nature Theme ---------- */
+html[data-theme="nature"] {
+    --primary-color: #4a8c6f;
+    --primary-hover: #3a6b54;
+    --secondary-bg: #e8efe6;
+    --card-bg: #ffffff;
+    --body-bg: #f4f8f2;
+    --text-main: #2c4a3e;
+    --text-muted: #5c7a6e;
+    --border-color: #cce0d6;
+    --nav-bg: #ffffff;
+}
+
+/* ---------- Ocean Theme ---------- */
+html[data-theme="ocean"] {
+    --primary-color: #00a6b7;
+    --primary-hover: #008a99;
+    --secondary-bg: #e0f2f5;
+    --card-bg: #ffffff;
+    --body-bg: #f0f7fa;
+    --text-main: #006d77;
+    --text-muted: #4a8d94;
+    --border-color: #b3e0e6;
+    --nav-bg: #ffffff;
+}
+
+/* ---------- Sunset Theme ---------- */
+html[data-theme="sunset"] {
+    --primary-color: #ff9e7d;
+    --primary-hover: #e08b6e;
+    --secondary-bg: #451e3e;
+    --card-bg: #451e3e;
+    /* card matches secondary somewhat */
+    --body-bg: #2d142c;
+    --text-main: #ffd4b8;
+    --text-muted: #bf9585;
+    --border-color: #6d3b5e;
+    --nav-bg: #451e3e;
+}
+
+/* ---------- Midnight Theme ---------- */
+html[data-theme="midnight"] {
+    --primary-color: #7c3aed;
+    --primary-hover: #6d28d9;
+    --secondary-bg: #1e293b;
+    --card-bg: #0f1724;
+    --body-bg: #0b0f1a;
+    --text-main: #cbd5e1;
+    --text-muted: #64748b;
+    --border-color: #1e293b;
+    --nav-bg: #0f1724;
+}
+
+/* ---------- Matrix Theme ---------- */
+html[data-theme="matrix"] {
+    --primary-color: #00ff77;
+    --primary-hover: #00cc55;
+    --secondary-bg: #000000;
+    --card-bg: #0d0d0d;
+    --body-bg: #000000;
+    --text-main: #00ff77;
+    --text-muted: #008f44;
+    --border-color: #003311;
+    --nav-bg: #0d0d0d;
+}
+
+/* ---------- Neon Theme ---------- */
+html[data-theme="neon"] {
+    --primary-color: #00f5ff;
+    --primary-hover: #00c2cc;
+    --secondary-bg: #0d1b2a;
+    --card-bg: #071223;
+    --body-bg: #081018;
+    --text-main: #e6f7ff;
+    --text-muted: #5a8aa6;
+    --border-color: #004d4d;
+    --nav-bg: #071223;
+}
+
+/* ---------- Mono Theme ---------- */
+html[data-theme="mono"] {
+    --primary-color: #000000;
+    --primary-hover: #333333;
+    --secondary-bg: #eeeeee;
+    --card-bg: #f5f5f5;
+    --body-bg: #ffffff;
+    --text-main: #111111;
+    --text-muted: #666666;
+    --border-color: #cccccc;
+    --nav-bg: #f5f5f5;
+}
+
+/* Override Bootstrap Defaults based on variables */
+[data-theme] .card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme] body {
+    background-color: var(--body-bg);
+    color: var(--text-main);
+}
+
+[data-theme] .text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-theme] .border-secondary {
+    border-color: var(--border-color) !important;
+}
+
+[data-theme] .bg-dark {
+    background-color: var(--secondary-bg) !important;
+    /* This overrides bootstrap bg-dark. be careful. 
+       In our inputs, we used bg-dark. */
+}
+
+[data-theme] input.form-control,
+[data-theme] textarea.form-control {
+    background-color: var(--secondary-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+[data-theme] .list-group-item:hover {
+    background-color: rgba(128, 128, 128, 0.1);
+}
+
+[data-theme] ::-webkit-scrollbar-track {
+    background: var(--body-bg);
+}
+
+[data-theme] ::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+}
+
+/* Navbar Theme Overrides */
+[data-theme] .navbar {
+    background-color: var(--nav-bg) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+[data-theme] .navbar-brand {
+    color: var(--primary-color) !important;
+}
+
+[data-theme] .navbar .btn-outline-secondary {
+    color: var(--text-muted) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme] .navbar .btn-outline-secondary:hover {
+    background-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
